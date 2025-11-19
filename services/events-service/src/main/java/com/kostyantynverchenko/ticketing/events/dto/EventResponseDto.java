@@ -1,6 +1,7 @@
 package com.kostyantynverchenko.ticketing.events.dto;
 
 import com.kostyantynverchenko.ticketing.events.entity.Event;
+import com.kostyantynverchenko.ticketing.events.entity.EventStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -11,6 +12,7 @@ public class EventResponseDto {
     private LocalDate date;
     private BigDecimal price;
     private int ticketsAvailable;
+    private EventStatus status;
 
     public EventResponseDto() {}
 
@@ -20,6 +22,7 @@ public class EventResponseDto {
         this.date = event.getDate();
         this.price = event.getPrice();
         this.ticketsAvailable = event.getTicketsAvailable();
+        this.status = event.getEventStatus();
     }
 
     public Long getId() {
@@ -60,5 +63,13 @@ public class EventResponseDto {
 
     public void setTicketsAvailable(int ticketsAvailable) {
         this.ticketsAvailable = ticketsAvailable;
+    }
+
+    public EventStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(EventStatus status) {
+        this.status = status;
     }
 }

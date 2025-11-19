@@ -1,6 +1,8 @@
 package com.kostyantynverchenko.ticketing.events.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -23,6 +25,21 @@ public class Event {
 
     @Column(name = "tickets_available")
     private int ticketsAvailable;
+
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.ENUM)
+    @Column(name = "event_status")
+    private EventStatus eventStatus = EventStatus.AVAILABLE;
+
+    public Event() {}
+
+    public Event(String title, LocalDate date, BigDecimal price, int ticketsAvailable,  EventStatus eventStatus) {
+        this.title = title;
+        this.date = date;
+        this.price = price;
+        this.ticketsAvailable = ticketsAvailable;
+        this.eventStatus = eventStatus;
+    }
 
     public Long getId() {
         return id;
@@ -62,5 +79,13 @@ public class Event {
 
     public void setTicketsAvailable(int ticketsAvailable) {
         this.ticketsAvailable = ticketsAvailable;
+    }
+
+    public EventStatus getEventStatus() {
+        return eventStatus;
+    }
+
+    public void setEventStatus(EventStatus eventStatus) {
+        this.eventStatus = eventStatus;
     }
 }
