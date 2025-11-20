@@ -1,8 +1,6 @@
 package com.kostyantynverchenko.ticketing.events.entity;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -27,7 +25,6 @@ public class Event {
     private int ticketsAvailable;
 
     @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.ENUM)
     @Column(name = "event_status")
     private EventStatus eventStatus = EventStatus.AVAILABLE;
 
