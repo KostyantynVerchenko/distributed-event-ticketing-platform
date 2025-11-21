@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.springframework.http.ResponseEntity.ok;
 
@@ -48,7 +49,7 @@ public class EventController {
     }
 
     @GetMapping("/events/{id}")
-    public ResponseEntity<?> findById(@PathVariable Long id) {
+    public ResponseEntity<?> findById(@PathVariable UUID id) {
         log.info("Find event by id = {} request", id);
         EventResponseDto eventResponseDto = new EventResponseDto(eventService.getEventById(id));
 
@@ -64,7 +65,7 @@ public class EventController {
     }
 
     @PutMapping("/events/{id}")
-    public ResponseEntity<?> updateEvent(@PathVariable Long id, @Valid @RequestBody CreateEventRequestDto createEventRequestDto) {
+    public ResponseEntity<?> updateEvent(@PathVariable UUID id, @Valid @RequestBody CreateEventRequestDto createEventRequestDto) {
         log.info("Update event request: id = {}, title = {}", id, createEventRequestDto.getTitle());
 
         EventResponseDto eventResponseDto = new EventResponseDto(eventService.updateEvent(id, createEventRequestDto));
@@ -73,7 +74,7 @@ public class EventController {
     }
 
     @DeleteMapping("/events/{id}")
-    public ResponseEntity<?> deleteEvent(@PathVariable Long id) {
+    public ResponseEntity<?> deleteEvent(@PathVariable UUID id) {
         log.info("Delete event by id = {} request", id);
 
         eventService.deleteEvent(id);

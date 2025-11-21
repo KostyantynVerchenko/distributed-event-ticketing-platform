@@ -5,9 +5,10 @@ import com.kostyantynverchenko.ticketing.events.entity.EventStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.UUID;
 
 public class EventResponseDto {
-    private Long id;
+    private UUID id;
     private String title;
     private LocalDate date;
     private BigDecimal price;
@@ -25,11 +26,11 @@ public class EventResponseDto {
         this.status = event.getEventStatus();
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

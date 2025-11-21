@@ -1,0 +1,12 @@
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+ALTER TABLE event
+    ALTER COLUMN id DROP DEFAULT;
+
+ALTER TABLE event
+    ALTER COLUMN id TYPE UUID USING gen_random_uuid();
+
+ALTER TABLE event
+    ALTER COLUMN id SET DEFAULT gen_random_uuid();
+
+DROP SEQUENCE IF EXISTS event_id_seq;

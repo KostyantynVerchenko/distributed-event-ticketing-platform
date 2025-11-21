@@ -1,15 +1,17 @@
 package com.kostyantynverchenko.ticketing.events.exception;
 
+import java.util.UUID;
+
 public class EventNotFoundException extends RuntimeException {
 
-    private final Long eventId;
+    private final UUID eventId;
 
-    public EventNotFoundException(Long eventId) {
+    public EventNotFoundException(UUID eventId) {
         super("Event with id " + eventId + " not found");
         this.eventId = eventId;
     }
 
-    public Long getEventId() {
+    public UUID getEventId() {
         return eventId;
     }
 }

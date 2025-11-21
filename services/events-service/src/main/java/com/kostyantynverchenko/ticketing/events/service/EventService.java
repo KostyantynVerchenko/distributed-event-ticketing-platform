@@ -16,6 +16,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -45,7 +46,7 @@ public class EventService {
         return new PagedResponse<>(content, events.getNumber(), events.getSize(), events.getTotalElements(), events.getTotalPages(), events.isLast());
     };
 
-    public Event getEventById(Long id) {
+    public Event getEventById(UUID id) {
         log.debug("Get event by id {}", id);
         return eventRepository.findById(id)
                 .orElseThrow(() -> {
@@ -72,7 +73,7 @@ public class EventService {
     }
 
     @Transactional
-    public Event updateEvent(Long id, CreateEventRequestDto createEventRequestDto) {
+    public Event updateEvent(UUID id, CreateEventRequestDto createEventRequestDto) {
         log.debug("Update event: id = {}", id);
 
         Event event = getEventById(id);
@@ -89,7 +90,7 @@ public class EventService {
     }
 
     @Transactional
-    public void deleteEvent(Long id) {
+    public void deleteEvent(UUID id) {
         log.debug("Delete event: id = {}", id);
         Event event = getEventById(id);
 
