@@ -2,6 +2,7 @@ package com.kostyantynverchenko.ticketing.events.controller;
 
 import com.kostyantynverchenko.ticketing.events.dto.CreateEventRequestDto;
 import com.kostyantynverchenko.ticketing.events.dto.EventResponseDto;
+import com.kostyantynverchenko.ticketing.events.dto.PagedResponse;
 import com.kostyantynverchenko.ticketing.events.entity.Event;
 import com.kostyantynverchenko.ticketing.events.service.EventService;
 import jakarta.validation.Valid;
@@ -24,6 +25,8 @@ public class EventController {
         this.eventService = eventService;
     }
 
+    // Default findAll
+/*
     @GetMapping("/events")
     public ResponseEntity<?> findAll() {
         log.info("Find all events request");
@@ -31,6 +34,17 @@ public class EventController {
         List<EventResponseDto> eventResponseDtos = events.stream().map(EventResponseDto::new).toList();
 
         return ok(eventResponseDtos);
+    }
+*/
+
+    // FindAll with pagination and sorted by date
+    @GetMapping("/events")
+    public ResponseEntity<?> findAll(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+        log.info("Find all events request");
+
+        PagedResponse<EventResponseDto> response = eventService.getAllEvents(page, size);
+
+        return ok(response);
     }
 
     @GetMapping("/events/{id}")

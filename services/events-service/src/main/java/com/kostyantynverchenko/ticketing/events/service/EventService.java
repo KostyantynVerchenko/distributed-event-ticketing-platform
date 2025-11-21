@@ -1,12 +1,18 @@
 package com.kostyantynverchenko.ticketing.events.service;
 
 import com.kostyantynverchenko.ticketing.events.dto.CreateEventRequestDto;
+import com.kostyantynverchenko.ticketing.events.dto.EventResponseDto;
+import com.kostyantynverchenko.ticketing.events.dto.PagedResponse;
 import com.kostyantynverchenko.ticketing.events.entity.Event;
 import com.kostyantynverchenko.ticketing.events.entity.EventStatus;
 import com.kostyantynverchenko.ticketing.events.exception.EventNotFoundException;
 import com.kostyantynverchenko.ticketing.events.repository.EventRepository;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,11 +25,25 @@ public class EventService {
     public EventService(EventRepository eventRepository) {
         this.eventRepository = eventRepository;
     }
-
+/*
     public List<Event> getAllEvents() {
         log.debug("Get all events");
         return eventRepository.findAllByEventStatusNot(EventStatus.DELETED);
     }
+ */
+
+    public PagedResponse<EventResponseDto> getAllEvents(int page, int size) {
+        log.debug("Get all events with page {} and size {}", page, size);
+
+        Sort sort = Sort.by(Sort.Direction.ASC, "date");
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<Event> events = eventRepository.findAllByEventStatusNot(EventStatus.DELETED, pageable);
+
+        List<EventResponseDto> content = events.getContent().stream().map(EventResponseDto::new).toList();
+
+        return new PagedResponse<>(content, events.getNumber(), events.getSize(), events.getTotalElements(), events.getTotalPages(), events.isLast());
+    };
 
     public Event getEventById(Long id) {
         log.debug("Get event by id {}", id);
