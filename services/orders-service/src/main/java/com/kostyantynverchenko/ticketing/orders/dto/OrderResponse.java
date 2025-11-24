@@ -1,76 +1,51 @@
-package com.kostyantynverchenko.ticketing.orders.entity;
+package com.kostyantynverchenko.ticketing.orders.dto;
 
-import jakarta.persistence.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import com.kostyantynverchenko.ticketing.orders.entity.Order;
+import com.kostyantynverchenko.ticketing.orders.entity.OrderCurrency;
+import com.kostyantynverchenko.ticketing.orders.entity.OrderItem;
+import com.kostyantynverchenko.ticketing.orders.entity.OrderStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-@Entity
-@Table(name = "orders")
-public class Order {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
-
-    @Column(name = "user_id", nullable = false)
+public class OrderResponse {
+    private UUID orderId;
     private UUID userId;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "order_status", nullable = false)
-    private OrderStatus orderStatus = OrderStatus.CREATED;
-
-    @Column(name = "total_amount", nullable = false)
+    private OrderStatus orderStatus;
     private BigDecimal totalAmount;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "order_currency", nullable = false)
-    private OrderCurrency orderCurrency =  OrderCurrency.USD;
-
-    @Column(name = "reserved_until")
+    private OrderCurrency orderCurrency;
     private LocalDateTime reservedUntil;
-
-    @Column(name = "payment_id")
     private UUID paymentId;
-
-    @CreationTimestamp
-    @Column(name = "created_at",  updatable = false, nullable = false)
     private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @Column(name = "version")
-    @Version
-    private Long version;
+    private List<OrderItemResponse> orderItems;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OrderItem> orderItems = new ArrayList<>();
+    public OrderResponse() {}
 
-    public void addOrderItem(OrderItem item) {
-        this.orderItems.add(item);
-        item.setOrder(this);
+    public OrderResponse(Order order) {
+        this.orderId = order.getId();
+        this.userId = order.getUserId();
+        this.orderStatus = order.getOrderStatus();
+        this.totalAmount = order.getTotalAmount();
+        this.orderCurrency = order.getOrderCurrency();
+        this.reservedUntil = order.getReservedUntil();
+        this.paymentId = order.getPaymentId();
+        this.createdAt = order.getCreatedAt();
+        this.updatedAt = order.getUpdatedAt();
+        this.orderItems = order.getOrderItems().stream()
+                .map(OrderItemResponse::new)
+                .toList();
     }
 
-    public void removeOrderItem(OrderItem item) {
-        this.orderItems.remove(item);
-        item.setOrder(null);
+    public UUID getOrderId() {
+        return orderId;
     }
 
-    public Order() {}
-
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
+    public void setOrderId(UUID orderId) {
+        this.orderId = orderId;
     }
 
     public UUID getUserId() {
@@ -137,19 +112,11 @@ public class Order {
         this.updatedAt = updatedAt;
     }
 
-    public Long getVersion() {
-        return version;
-    }
-
-    public void setVersion(Long version) {
-        this.version = version;
-    }
-
-    public List<OrderItem> getOrderItems() {
+    public List<OrderItemResponse> getOrderItems() {
         return orderItems;
     }
 
-    public void setOrderItems(List<OrderItem> orderItems) {
+    public void setOrderItems(List<OrderItemResponse> orderItems) {
         this.orderItems = orderItems;
     }
 }

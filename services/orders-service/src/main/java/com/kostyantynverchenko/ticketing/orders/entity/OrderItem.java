@@ -1,9 +1,9 @@
 package com.kostyantynverchenko.ticketing.orders.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Min;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -36,7 +36,7 @@ public class OrderItem {
     private String eventTitleSnapshot;
 
     @Column(name = "event_date_snapshot")
-    private LocalDateTime eventDateSnapshot;
+    private LocalDate eventDateSnapshot;
 
     @Column(name = "ticket_price_snapshot")
     private BigDecimal ticketPriceSnapshot;
@@ -99,11 +99,11 @@ public class OrderItem {
         this.eventTitleSnapshot = eventTitleSnapshot;
     }
 
-    public LocalDateTime getEventDateSnapshot() {
+    public LocalDate getEventDateSnapshot() {
         return eventDateSnapshot;
     }
 
-    public void setEventDateSnapshot(LocalDateTime eventDateSnapshot) {
+    public void setEventDateSnapshot(LocalDate eventDateSnapshot) {
         this.eventDateSnapshot = eventDateSnapshot;
     }
 
