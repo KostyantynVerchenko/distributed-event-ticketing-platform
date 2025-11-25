@@ -51,11 +51,11 @@ public class ReservationExpirationService {
     public void expireSingleOrder(UUID orderId) {
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found"));
 
-        if (!order.getOrderStatus().equals(OrderStatus.PENDING_PAYMENT) || !order.getOrderStatus().equals(OrderStatus.CREATED)) {
+        if (!order.getOrderStatus().equals(OrderStatus.PENDING_PAYMENT) && !order.getOrderStatus().equals(OrderStatus.CREATED)) {
             return;
         }
 
-        if (order.getReservedUntil().isAfter(LocalDateTime.now())) {
+        if (order.getReservedUntil() == null || order.getReservedUntil().isAfter(LocalDateTime.now())) {
             return;
         }
 
