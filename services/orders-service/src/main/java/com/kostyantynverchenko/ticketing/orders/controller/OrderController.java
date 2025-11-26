@@ -1,5 +1,6 @@
 package com.kostyantynverchenko.ticketing.orders.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.kostyantynverchenko.ticketing.orders.dto.CreateOrderRequest;
 import com.kostyantynverchenko.ticketing.orders.dto.OrderResponse;
 import com.kostyantynverchenko.ticketing.orders.entity.Order;
@@ -51,5 +52,33 @@ public class OrderController {
         return ResponseEntity.ok(orderResponse);
     }
 
+    @PostMapping("orders/{id}/cancel")
+    public ResponseEntity<?> cancelOrder(@PathVariable UUID id) {
+        log.info("Request to cancel Order with id {}", id);
 
+        orderService.cancelPayment(id);
+        OrderResponse orderResponse = new OrderResponse(orderService.getOrderById(id));
+
+        return ResponseEntity.ok(orderResponse);
+    }
+
+    @PostMapping("orders/{id}/pay")
+    public ResponseEntity<?> payOrder(@PathVariable UUID id) {
+        log.info("Request to pay Order with id {}", id);
+
+        orderService.startPayment(id);
+        OrderResponse orderResponse = new OrderResponse(orderService.getOrderById(id));
+
+        return ResponseEntity.ok(orderResponse);
+    }
+
+    @PostMapping("orders/{id}/finish-payment")
+    public ResponseEntity<?> finishPayment(@PathVariable UUID id) {
+        log.info("Request to finish Payment Order with id {}", id);
+
+        orderService.finishPayment(id);
+        OrderResponse orderResponse = new OrderResponse(orderService.getOrderById(id));
+
+        return ResponseEntity.ok(orderResponse);
+    }
 }

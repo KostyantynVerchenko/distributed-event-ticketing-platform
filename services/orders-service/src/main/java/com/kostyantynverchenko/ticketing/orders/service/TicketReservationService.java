@@ -1,6 +1,7 @@
 package com.kostyantynverchenko.ticketing.orders.service;
 
 import com.kostyantynverchenko.ticketing.orders.entity.TicketReservation;
+import com.kostyantynverchenko.ticketing.orders.exception.NotEnoughTicketsException;
 import com.kostyantynverchenko.ticketing.orders.repository.TicketReservationRepository;
 import jakarta.persistence.OptimisticLockException;
 import jakarta.transaction.Transactional;
@@ -60,7 +61,7 @@ public class TicketReservationService {
                 TicketReservation ticketReservation = getTicketReservationByEventUuid(eventId);
 
                 if (ticketReservation.getReservedTickets() + ticketReservation.getSoldTickets() + quantity > ticketReservation.getTotalTickets()) {
-                    throw new RuntimeException("Not enough tickets left");
+                    throw new NotEnoughTicketsException(eventId);
                 }
 
                 ticketReservation.setReservedTickets(ticketReservation.getReservedTickets() + quantity);
@@ -83,7 +84,7 @@ public class TicketReservationService {
         TicketReservation ticketReservation = getTicketReservationByEventUuid(eventId);
 
         if (ticketReservation.getReservedTickets() - quantity < 0) {
-            throw  new RuntimeException("Cannot remove reserved tickets below 0");
+            throw new NotEnoughTicketsException(eventId);
         } else {
             ticketReservation.setReservedTickets(ticketReservation.getReservedTickets() - quantity);
         }
@@ -98,7 +99,7 @@ public class TicketReservationService {
         TicketReservation ticketReservation = getTicketReservationByEventUuid(eventId);
 
         if (ticketReservation.getReservedTickets() < quantity) {
-            throw  new RuntimeException("Not enough tickets in reservation");
+            throw new NotEnoughTicketsException(eventId);
         }
 
         ticketReservation.setReservedTickets(ticketReservation.getReservedTickets() - quantity);

@@ -1,14 +1,17 @@
 package com.kostyantynverchenko.ticketing.orders.service;
 
-import com.kostyantynverchenko.ticketing.orders.entity.Order;
-import com.kostyantynverchenko.ticketing.orders.entity.OrderItem;
-import com.kostyantynverchenko.ticketing.orders.entity.OrderItemStatus;
-import com.kostyantynverchenko.ticketing.orders.entity.OrderStatus;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.kostyantynverchenko.ticketing.orders.dto.EventPayload;
+import com.kostyantynverchenko.ticketing.orders.entity.*;
+import com.kostyantynverchenko.ticketing.orders.exception.OrderNotFoundException;
+import com.kostyantynverchenko.ticketing.orders.exception.OutboxSerializationException;
 import com.kostyantynverchenko.ticketing.orders.repository.OrderRepository;
+import com.kostyantynverchenko.ticketing.orders.repository.OutboxEventRepository;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,10 +23,36 @@ public class ReservationExpirationService {
 
     private final OrderRepository orderRepository;
     private final TicketReservationService ticketReservationService;
+    private final ObjectMapper objectMapper;
+    private final OutboxEventRepository outboxEventRepository;
 
-    public ReservationExpirationService(OrderRepository orderRepository, TicketReservationService ticketReservationService) {
+    public ReservationExpirationService(OrderRepository orderRepository,
+                                        TicketReservationService ticketReservationService,
+                                        ObjectMapper objectMapper,
+                                        OutboxEventRepository outboxEventRepository) {
         this.orderRepository = orderRepository;
         this.ticketReservationService = ticketReservationService;
+        this.objectMapper = objectMapper;
+        this.outboxEventRepository = outboxEventRepository;
+    }
+
+    private void publishOrderEvent(String eventType, Order order) {
+        try {
+            EventPayload payload = new EventPayload(order.getId(), order.getUserId(), order.getOrderStatus().name(),order.getTotalAmount());
+
+            String payloadJson = objectMapper.writeValueAsString(payload);
+
+            OutboxEvent outboxEvent = new OutboxEvent();
+            outboxEvent.setAggregateType("Order");
+            outboxEvent.setAggregateId(order.getId());
+            outboxEvent.setEventType(eventType);
+            outboxEvent.setPayload(payloadJson);
+            outboxEvent.setStatus(OutboxEventStatus.NEW);
+
+            outboxEventRepository.save(outboxEvent);
+        } catch (JsonProcessingException e) {
+            throw new OutboxSerializationException(eventType, order.getId(), e);
+        }
     }
 
     @Scheduled(fixedDelayString = "60000")
@@ -49,7 +78,7 @@ public class ReservationExpirationService {
 
     @Transactional
     public void expireSingleOrder(UUID orderId) {
-        Order order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found"));
+        Order order = orderRepository.findById(orderId).orElseThrow(() -> new OrderNotFoundException(orderId));
 
         if (!order.getOrderStatus().equals(OrderStatus.PENDING_PAYMENT) && !order.getOrderStatus().equals(OrderStatus.CREATED)) {
             return;
@@ -65,6 +94,8 @@ public class ReservationExpirationService {
         }
 
         order.setOrderStatus(OrderStatus.EXPIRED);
+
+        publishOrderEvent("ORDER_EXPIRED", order);
 
         log.info("Order {} has been expired", orderId);
     }
