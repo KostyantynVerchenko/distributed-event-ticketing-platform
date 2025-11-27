@@ -41,6 +41,13 @@ public class TicketReservation {
 
     public TicketReservation() {}
 
+    public TicketReservation(UUID eventId, Integer totalTickets, Integer reservedTickets, Integer soldTickets) {
+        this.eventId = eventId;
+        this.totalTickets = totalTickets;
+        this.reservedTickets = reservedTickets;
+        this.soldTickets = soldTickets;
+    }
+
     public UUID getId() {
         return id;
     }
