@@ -2,7 +2,6 @@ package com.kostyantynverchenko.ticketing.orders.dto;
 
 import com.kostyantynverchenko.ticketing.orders.entity.Order;
 import com.kostyantynverchenko.ticketing.orders.entity.OrderCurrency;
-import com.kostyantynverchenko.ticketing.orders.entity.OrderItem;
 import com.kostyantynverchenko.ticketing.orders.entity.OrderStatus;
 
 import java.math.BigDecimal;

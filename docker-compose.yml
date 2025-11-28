@@ -15,6 +15,23 @@ services:
       db:
         condition: service_healthy
 
+  orders-service:
+    build:
+      context: ./services/orders-service
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://orders-db:5432/ticketing_orders
+      SPRING_DATASOURCE_USERNAME: orders_user
+      SPRING_DATASOURCE_PASSWORD: 123456789
+      EVENTS_SERVICE_BASE_URL: http://events-service:8080
+    depends_on:
+      orders-db:
+        condition: service_healthy
+      events-service:
+        condition: service_started
+
   db:
     image: postgres:15
     restart: unless-stopped
@@ -32,5 +49,23 @@ services:
       timeout: 5s
       retries: 5
 
+  orders-db:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ticketing_orders
+      POSTGRES_USER: orders_user
+      POSTGRES_PASSWORD: 123456789
+    ports:
+      - "5435:5432"
+    volumes:
+      - orders-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\"" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   db-data:
+  orders-db-data:

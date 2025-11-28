@@ -5,6 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kostyantynverchenko.ticketing.orders.client.events.EventResponse;
 import com.kostyantynverchenko.ticketing.orders.client.events.EventStatus;
 import com.kostyantynverchenko.ticketing.orders.client.events.EventsServiceClient;
+import com.kostyantynverchenko.ticketing.orders.client.payment.PaymentResponse;
+import com.kostyantynverchenko.ticketing.orders.client.payment.PaymentServiceClient;
+import com.kostyantynverchenko.ticketing.orders.client.payment.PaymentStatus;
 import com.kostyantynverchenko.ticketing.orders.dto.CreateOrderRequest;
 import com.kostyantynverchenko.ticketing.orders.dto.EventPayload;
 import com.kostyantynverchenko.ticketing.orders.entity.*;
@@ -30,17 +33,19 @@ public class OrderService {
     private final TicketReservationService ticketReservationService;
     private final OutboxEventRepository outboxEventRepository;
     private final ObjectMapper objectMapper;
+    private final PaymentServiceClient paymentServiceClient;
 
     public OrderService(OrderRepository orderRepository,
                         EventsServiceClient eventsServiceClient,
                         TicketReservationService ticketReservationService,
                         OutboxEventRepository outboxEventRepository,
-                        ObjectMapper objectMapper) {
+                        ObjectMapper objectMapper, PaymentServiceClient paymentServiceClient) {
         this.orderRepository = orderRepository;
         this.eventsServiceClient = eventsServiceClient;
         this.ticketReservationService = ticketReservationService;
         this.outboxEventRepository = outboxEventRepository;
         this.objectMapper = objectMapper;
+        this.paymentServiceClient = paymentServiceClient;
     }
 
     private void publishOrderEvent(String eventType, Order order) {
@@ -167,10 +172,9 @@ public class OrderService {
             return;
         }
 
-        Random random = new  Random();
-        int tempImitationOfPayment = random.nextInt(2) + 1; // super basic payment service emulation
+        PaymentResponse paymentResponse = paymentServiceClient.createPaymentByOrderId(orderId, order.getTotalAmount(), order.getOrderCurrency());
 
-        if (order.getOrderStatus().equals(OrderStatus.PENDING_PAYMENT) && tempImitationOfPayment == 1) {
+        if (order.getOrderStatus().equals(OrderStatus.PENDING_PAYMENT) && paymentResponse.getPaymentStatus().equals(PaymentStatus.SUCCESS)) {
             for (OrderItem orderItem : order.getOrderItems()) {
                 ticketReservationService.updateSoldTicketsByEvent(orderItem.getEventId(), orderItem.getQuantity());
                 orderItem.setStatus(OrderItemStatus.CONFIRMED);
@@ -178,7 +182,7 @@ public class OrderService {
             order.setOrderStatus(OrderStatus.PAID);
             publishOrderEvent("ORDER_PAID", order);
         }
-        else if (order.getOrderStatus().equals(OrderStatus.PENDING_PAYMENT) && tempImitationOfPayment == 2) {
+        else if (order.getOrderStatus().equals(OrderStatus.PENDING_PAYMENT) && paymentResponse.getPaymentStatus().equals(PaymentStatus.FAILED)) {
             for (OrderItem orderItem : order.getOrderItems()) {
                 ticketReservationService.removeReservedTicketsByEvent(orderItem.getEventId(), orderItem.getQuantity());
                 orderItem.setStatus(OrderItemStatus.RELEASED);

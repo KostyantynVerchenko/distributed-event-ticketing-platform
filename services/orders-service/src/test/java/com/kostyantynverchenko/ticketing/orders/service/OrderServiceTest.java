@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kostyantynverchenko.ticketing.orders.client.events.EventResponse;
 import com.kostyantynverchenko.ticketing.orders.client.events.EventStatus;
 import com.kostyantynverchenko.ticketing.orders.client.events.EventsServiceClient;
+import com.kostyantynverchenko.ticketing.orders.client.payment.PaymentServiceClient;
 import com.kostyantynverchenko.ticketing.orders.dto.CreateOrderRequest;
 import com.kostyantynverchenko.ticketing.orders.entity.*;
 import com.kostyantynverchenko.ticketing.orders.exception.EventNotAvailableException;
@@ -48,12 +49,15 @@ class OrderServiceTest {
     @Mock
     private ObjectMapper objectMapper;
 
+    @Mock
+    private PaymentServiceClient paymentServiceClient;
+
     @InjectMocks
     private OrderService orderService;
 
     @BeforeEach
     void setUp() {
-        orderService = new OrderService(orderRepository, eventsServiceClient, ticketReservationService, outboxEventRepository, objectMapper);
+        orderService = new OrderService(orderRepository, eventsServiceClient, ticketReservationService, outboxEventRepository, objectMapper, paymentServiceClient);
     }
 
     @Test

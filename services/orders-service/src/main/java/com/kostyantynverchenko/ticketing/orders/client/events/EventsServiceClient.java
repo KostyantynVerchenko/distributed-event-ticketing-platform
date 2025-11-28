@@ -1,5 +1,6 @@
 package com.kostyantynverchenko.ticketing.orders.client.events;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -11,7 +12,7 @@ import java.util.UUID;
 public class EventsServiceClient {
     private final RestClient restClient;
 
-    public EventsServiceClient(RestClient restClient) {
+    public EventsServiceClient(@Qualifier("eventsRestClient") RestClient restClient) {
         this.restClient = restClient;
     }
 
