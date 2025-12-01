@@ -3,6 +3,7 @@ package com.kostyantynverchenko.payment.service;
 import com.kostyantynverchenko.payment.dto.CreatePaymentRequest;
 import com.kostyantynverchenko.payment.entity.Payment;
 import com.kostyantynverchenko.payment.entity.PaymentStatus;
+import com.kostyantynverchenko.payment.exception.PaymentNotFoundException;
 import com.kostyantynverchenko.payment.repository.PaymentRepository;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +31,7 @@ public class PaymentService {
     public Payment getPaymentById(UUID paymentId) {
         log.info("Request to get payment by id {}", paymentId);
         return paymentRepository.findById(paymentId)
-                .orElseThrow(() -> new RuntimeException("Payment not found!"));
+                .orElseThrow(() -> new PaymentNotFoundException(paymentId));
     }
 
     public List<Payment> getPaymentByOrderId(UUID orderId) {

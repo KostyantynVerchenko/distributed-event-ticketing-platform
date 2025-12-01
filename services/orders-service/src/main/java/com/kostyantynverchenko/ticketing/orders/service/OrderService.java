@@ -172,7 +172,16 @@ public class OrderService {
             return;
         }
 
-        PaymentResponse paymentResponse = paymentServiceClient.createPaymentByOrderId(orderId, order.getTotalAmount(), order.getOrderCurrency());
+        PaymentResponse paymentResponse;
+
+        try {
+            paymentResponse = paymentServiceClient.createPaymentByOrderId(orderId, order.getTotalAmount(), order.getOrderCurrency());
+        } catch (Exception e) {
+            log.error("Failed to create payment for order {}. Treating as payment failure", orderId, e);
+
+            handlePaymentFailure(order);
+            return;
+        }
 
         if (order.getOrderStatus().equals(OrderStatus.PENDING_PAYMENT) && paymentResponse.getPaymentStatus().equals(PaymentStatus.SUCCESS)) {
             for (OrderItem orderItem : order.getOrderItems()) {
@@ -194,4 +203,15 @@ public class OrderService {
             throw new InvalidOrderStateException(orderId, order.getOrderStatus());
         }
     }
+
+    private void handlePaymentFailure(Order order) {
+        for (OrderItem orderItem :  order.getOrderItems()) {
+            ticketReservationService.removeReservedTicketsByEvent(orderItem.getEventId(), orderItem.getQuantity());
+            orderItem.setStatus(OrderItemStatus.RELEASED);
+        }
+        order.setOrderStatus(OrderStatus.FAILED);
+        publishOrderEvent("ORDER_FAILED", order);
+        log.info("Order {} payment failed", order.getId());
+    }
+
 }
