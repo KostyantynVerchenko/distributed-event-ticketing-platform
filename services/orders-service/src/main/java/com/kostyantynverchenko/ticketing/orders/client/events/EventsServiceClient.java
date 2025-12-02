@@ -29,4 +29,16 @@ public class EventsServiceClient {
             throw new RuntimeException("Failed to call events service: " + e.getMessage(), e);
         }
     }
+
+    public void reduceAvailableTickets(UUID id, int quantity) {
+        try {
+            restClient.post()
+                    .uri("/api/events/{id}/tickets/sell", id)
+                    .body(new UpdateTicketsRequest(quantity))
+                    .retrieve()
+                    .toBodilessEntity();
+        } catch (RestClientResponseException e) {
+            throw new RuntimeException("Failed to update tickets for event %s: %s".formatted(id, e.getMessage()), e);
+        }
+    }
 }

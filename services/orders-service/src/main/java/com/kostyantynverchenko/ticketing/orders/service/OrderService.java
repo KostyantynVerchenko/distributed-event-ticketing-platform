@@ -155,6 +155,7 @@ public class OrderService {
             for (OrderItem orderItem : order.getOrderItems()) {
                 ticketReservationService.updateSoldTicketsByEvent(orderItem.getEventId(), orderItem.getQuantity());
                 orderItem.setStatus(OrderItemStatus.CONFIRMED);
+                eventsServiceClient.reduceAvailableTickets(orderItem.getEventId(), orderItem.getQuantity());
             }
             order.setPaymentId(paymentEventPayload.getPaymentId());
             order.setOrderStatus(OrderStatus.PAID);

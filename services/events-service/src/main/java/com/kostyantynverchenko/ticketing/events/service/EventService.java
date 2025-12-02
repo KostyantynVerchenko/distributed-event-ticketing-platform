@@ -6,6 +6,7 @@ import com.kostyantynverchenko.ticketing.events.dto.PagedResponse;
 import com.kostyantynverchenko.ticketing.events.entity.Event;
 import com.kostyantynverchenko.ticketing.events.entity.EventStatus;
 import com.kostyantynverchenko.ticketing.events.exception.EventNotFoundException;
+import com.kostyantynverchenko.ticketing.events.exception.NotEnoughTicketsException;
 import com.kostyantynverchenko.ticketing.events.repository.EventRepository;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
@@ -97,5 +98,25 @@ public class EventService {
         event.setEventStatus(EventStatus.DELETED);
 
         eventRepository.save(event);
+    }
+
+    @Transactional
+    public Event reduceAvailableTickets(UUID id, int quantity) {
+        log.debug("Reduce tickets for event: id = {}, quantity = {}", id, quantity);
+
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("Quantity must be positive");
+        }
+
+        Event event = getEventById(id);
+
+        int updatedTickets = event.getTicketsAvailable() - quantity;
+        if (updatedTickets < 0) {
+            throw new NotEnoughTicketsException(id);
+        }
+
+        event.setTicketsAvailable(updatedTickets);
+
+        return eventRepository.save(event);
     }
 }
