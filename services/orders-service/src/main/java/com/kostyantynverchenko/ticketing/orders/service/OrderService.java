@@ -5,11 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kostyantynverchenko.ticketing.orders.client.events.EventResponse;
 import com.kostyantynverchenko.ticketing.orders.client.events.EventStatus;
 import com.kostyantynverchenko.ticketing.orders.client.events.EventsServiceClient;
-import com.kostyantynverchenko.ticketing.orders.client.payment.PaymentResponse;
-import com.kostyantynverchenko.ticketing.orders.client.payment.PaymentServiceClient;
-import com.kostyantynverchenko.ticketing.orders.client.payment.PaymentStatus;
 import com.kostyantynverchenko.ticketing.orders.dto.CreateOrderRequest;
 import com.kostyantynverchenko.ticketing.orders.dto.EventPayload;
+import com.kostyantynverchenko.ticketing.orders.dto.payment.PaymentEventPayload;
+import com.kostyantynverchenko.ticketing.orders.dto.payment.PaymentStatus;
 import com.kostyantynverchenko.ticketing.orders.entity.*;
 import com.kostyantynverchenko.ticketing.orders.exception.*;
 import com.kostyantynverchenko.ticketing.orders.repository.OrderRepository;
@@ -21,7 +20,6 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Random;
 import java.util.UUID;
 
 @Service
@@ -33,19 +31,17 @@ public class OrderService {
     private final TicketReservationService ticketReservationService;
     private final OutboxEventRepository outboxEventRepository;
     private final ObjectMapper objectMapper;
-    private final PaymentServiceClient paymentServiceClient;
 
     public OrderService(OrderRepository orderRepository,
                         EventsServiceClient eventsServiceClient,
                         TicketReservationService ticketReservationService,
                         OutboxEventRepository outboxEventRepository,
-                        ObjectMapper objectMapper, PaymentServiceClient paymentServiceClient) {
+                        ObjectMapper objectMapper) {
         this.orderRepository = orderRepository;
         this.eventsServiceClient = eventsServiceClient;
         this.ticketReservationService = ticketReservationService;
         this.outboxEventRepository = outboxEventRepository;
         this.objectMapper = objectMapper;
-        this.paymentServiceClient = paymentServiceClient;
     }
 
     private void publishOrderEvent(String eventType, Order order) {
@@ -101,7 +97,7 @@ public class OrderService {
 
         order.addOrderItem(orderItem);
         order.setUserId(UUID.randomUUID());
-        order.setOrderStatus(OrderStatus.CREATED);
+        order.setOrderStatus(OrderStatus.PENDING_PAYMENT);
 
         BigDecimal totAm = BigDecimal.valueOf(orderItem.getQuantity()).multiply(eventResponse.getPrice());
         order.setTotalAmount(totAm);
@@ -137,29 +133,12 @@ public class OrderService {
 
 
     @Transactional
-    public void startPayment(UUID orderId) {
-        Order order = orderRepository.findById(orderId).orElseThrow(() -> new OrderNotFoundException(orderId));
+    public void processPaymentEvent(PaymentEventPayload paymentEventPayload) {
+        Order order = orderRepository.findById(paymentEventPayload.getOrderId()).orElseThrow(() -> new OrderNotFoundException(paymentEventPayload.getOrderId()));
 
-        if (order.getReservedUntil() != null && order.getReservedUntil().isBefore(LocalDateTime.now())) {
-            throw new OrderExpiredException(orderId);
-        }
-
-        if (order.getOrderStatus().equals(OrderStatus.CREATED)) {
-            order.setOrderStatus(OrderStatus.PENDING_PAYMENT);
-        }
-        else {
-            throw new InvalidOrderStateException(orderId, order.getOrderStatus());
-        }
-
-        log.info("Order {} has been moved to PENDING_PAYMENT", orderId);
-    }
-
-    @Transactional
-    public void finishPayment(UUID orderId) {
-        Order order = orderRepository.findById(orderId).orElseThrow(() -> new OrderNotFoundException(orderId));
-
-        if (order.getOrderStatus() != OrderStatus.PENDING_PAYMENT) {
-            throw new InvalidOrderStateException(orderId, order.getOrderStatus());
+        if (!order.getOrderStatus().equals(OrderStatus.PENDING_PAYMENT)) {
+            log.warn("Order {} has been cancelled in status {}", paymentEventPayload.getOrderId(), order.getOrderStatus());
+            return;
         }
 
         if (order.getReservedUntil() != null && order.getReservedUntil().isBefore(LocalDateTime.now())) {
@@ -172,46 +151,25 @@ public class OrderService {
             return;
         }
 
-        PaymentResponse paymentResponse;
-
-        try {
-            paymentResponse = paymentServiceClient.createPaymentByOrderId(orderId, order.getTotalAmount(), order.getOrderCurrency());
-        } catch (Exception e) {
-            log.error("Failed to create payment for order {}. Treating as payment failure", orderId, e);
-
-            handlePaymentFailure(order);
-            return;
-        }
-
-        if (order.getOrderStatus().equals(OrderStatus.PENDING_PAYMENT) && paymentResponse.getPaymentStatus().equals(PaymentStatus.SUCCESS)) {
+        if (paymentEventPayload.getPaymentStatus() == PaymentStatus.SUCCESS) {
             for (OrderItem orderItem : order.getOrderItems()) {
                 ticketReservationService.updateSoldTicketsByEvent(orderItem.getEventId(), orderItem.getQuantity());
                 orderItem.setStatus(OrderItemStatus.CONFIRMED);
             }
+            order.setPaymentId(paymentEventPayload.getPaymentId());
             order.setOrderStatus(OrderStatus.PAID);
             publishOrderEvent("ORDER_PAID", order);
-        }
-        else if (order.getOrderStatus().equals(OrderStatus.PENDING_PAYMENT) && paymentResponse.getPaymentStatus().equals(PaymentStatus.FAILED)) {
+        } else if (paymentEventPayload.getPaymentStatus() == PaymentStatus.FAILED) {
             for (OrderItem orderItem : order.getOrderItems()) {
                 ticketReservationService.removeReservedTicketsByEvent(orderItem.getEventId(), orderItem.getQuantity());
                 orderItem.setStatus(OrderItemStatus.RELEASED);
             }
+            order.setPaymentId(paymentEventPayload.getPaymentId());
             order.setOrderStatus(OrderStatus.FAILED);
             publishOrderEvent("ORDER_FAILED", order);
+        } else {
+            log.warn("Received unknown payment status {} for order {}", paymentEventPayload.getPaymentStatus(), order.getId());
         }
-        else {
-            throw new InvalidOrderStateException(orderId, order.getOrderStatus());
-        }
-    }
-
-    private void handlePaymentFailure(Order order) {
-        for (OrderItem orderItem :  order.getOrderItems()) {
-            ticketReservationService.removeReservedTicketsByEvent(orderItem.getEventId(), orderItem.getQuantity());
-            orderItem.setStatus(OrderItemStatus.RELEASED);
-        }
-        order.setOrderStatus(OrderStatus.FAILED);
-        publishOrderEvent("ORDER_FAILED", order);
-        log.info("Order {} payment failed", order.getId());
     }
 
 }

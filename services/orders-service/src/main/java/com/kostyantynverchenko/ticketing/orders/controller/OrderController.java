@@ -61,24 +61,4 @@ public class OrderController {
 
         return ResponseEntity.ok(orderResponse);
     }
-
-    @PostMapping("orders/{id}/pay")
-    public ResponseEntity<?> payOrder(@PathVariable UUID id) {
-        log.info("Request to pay Order with id {}", id);
-
-        orderService.startPayment(id);
-        OrderResponse orderResponse = new OrderResponse(orderService.getOrderById(id));
-
-        return ResponseEntity.ok(orderResponse);
-    }
-
-    @PostMapping("orders/{id}/finish-payment")
-    public ResponseEntity<?> finishPayment(@PathVariable UUID id) {
-        log.info("Request to finish Payment Order with id {}", id);
-
-        orderService.finishPayment(id);
-        OrderResponse orderResponse = new OrderResponse(orderService.getOrderById(id));
-
-        return ResponseEntity.ok(orderResponse);
-    }
 }

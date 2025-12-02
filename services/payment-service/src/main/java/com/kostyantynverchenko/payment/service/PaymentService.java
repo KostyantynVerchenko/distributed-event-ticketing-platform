@@ -1,6 +1,7 @@
 package com.kostyantynverchenko.payment.service;
 
 import com.kostyantynverchenko.payment.dto.CreatePaymentRequest;
+import com.kostyantynverchenko.payment.dto.event.PaymentEventPayload;
 import com.kostyantynverchenko.payment.entity.Payment;
 import com.kostyantynverchenko.payment.entity.PaymentStatus;
 import com.kostyantynverchenko.payment.exception.PaymentNotFoundException;
@@ -18,9 +19,11 @@ import java.util.concurrent.ThreadLocalRandom;
 public class PaymentService {
 
     private final PaymentRepository paymentRepository;
+    private final PaymentEventPublisher paymentEventPublisher;
 
-    public PaymentService(PaymentRepository paymentRepository) {
+    public PaymentService(PaymentRepository paymentRepository, PaymentEventPublisher paymentEventPublisher) {
         this.paymentRepository = paymentRepository;
+        this.paymentEventPublisher = paymentEventPublisher;
     }
 
     public List<Payment> getAllPayments() {
@@ -37,6 +40,11 @@ public class PaymentService {
     public List<Payment> getPaymentByOrderId(UUID orderId) {
         log.info("Request to get payment by order id {}", orderId);
         return paymentRepository.findByOrderId(orderId);
+    }
+
+    public List<Payment> getAllPayments(UUID orderId) {
+        log.info("Request to get all payments");
+        return paymentRepository.findAll();
     }
 
     @Transactional
@@ -64,6 +72,22 @@ public class PaymentService {
             log.info("Payment = {} for order = {} failed - {}", payment.getId(), request.getOrderId(),  payment.getFailureReason());
         }
 
-        return paymentRepository.save(payment);
+        payment = paymentRepository.save(payment);
+
+        publishPaymentEvent(payment);
+        return payment;
+    }
+
+    public void publishPaymentEvent(Payment payment) {
+        PaymentEventPayload paymentEventPayload = new PaymentEventPayload();
+
+        paymentEventPayload.setPaymentId(payment.getId());
+        paymentEventPayload.setOrderId(payment.getOrderId());
+        paymentEventPayload.setAmount(payment.getAmount());
+        paymentEventPayload.setPaymentStatus(payment.getStatus());
+        paymentEventPayload.setFailureReason(payment.getFailureReason());
+
+        String eventType = payment.getStatus() == PaymentStatus.SUCCESS ? "PAYMENT_SUCCESS" : "PAYMENT_FAILED";
+        paymentEventPublisher.publishPaymentEvent(paymentEventPayload, eventType);
     }
 }

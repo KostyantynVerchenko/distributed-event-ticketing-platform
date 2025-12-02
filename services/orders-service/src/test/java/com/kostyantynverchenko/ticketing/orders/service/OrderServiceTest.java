@@ -4,11 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kostyantynverchenko.ticketing.orders.client.events.EventResponse;
 import com.kostyantynverchenko.ticketing.orders.client.events.EventStatus;
 import com.kostyantynverchenko.ticketing.orders.client.events.EventsServiceClient;
-import com.kostyantynverchenko.ticketing.orders.client.payment.PaymentServiceClient;
 import com.kostyantynverchenko.ticketing.orders.dto.CreateOrderRequest;
+import com.kostyantynverchenko.ticketing.orders.dto.payment.PaymentEventPayload;
+import com.kostyantynverchenko.ticketing.orders.dto.payment.PaymentStatus;
 import com.kostyantynverchenko.ticketing.orders.entity.*;
 import com.kostyantynverchenko.ticketing.orders.exception.EventNotAvailableException;
-import com.kostyantynverchenko.ticketing.orders.exception.OrderExpiredException;
 import com.kostyantynverchenko.ticketing.orders.repository.OrderRepository;
 import com.kostyantynverchenko.ticketing.orders.repository.OutboxEventRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,7 +20,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -49,15 +48,12 @@ class OrderServiceTest {
     @Mock
     private ObjectMapper objectMapper;
 
-    @Mock
-    private PaymentServiceClient paymentServiceClient;
-
     @InjectMocks
     private OrderService orderService;
 
     @BeforeEach
     void setUp() {
-        orderService = new OrderService(orderRepository, eventsServiceClient, ticketReservationService, outboxEventRepository, objectMapper, paymentServiceClient);
+        orderService = new OrderService(orderRepository, eventsServiceClient, ticketReservationService, outboxEventRepository, objectMapper);
     }
 
     @Test
@@ -83,7 +79,7 @@ class OrderServiceTest {
         Order result = orderService.createOrder(createOrderRequest);
 
         assertNotNull(result);
-        assertEquals(OrderStatus.CREATED, result.getOrderStatus());
+        assertEquals(OrderStatus.PENDING_PAYMENT, result.getOrderStatus());
         assertNotNull(result.getUserId());
         assertNotNull(result.getReservedUntil());
         assertEquals(1, result.getOrderItems().size());
@@ -128,7 +124,7 @@ class OrderServiceTest {
     void cancelPaymentFromCreated() {
         Order order = new Order();
         order.setId(ORDER_ID);
-        order.setOrderStatus(OrderStatus.CREATED);
+        order.setOrderStatus(OrderStatus.PENDING_PAYMENT);
 
         OrderItem orderItem = new OrderItem();
         orderItem.setEventId(EVENT_ID);
@@ -149,16 +145,30 @@ class OrderServiceTest {
     }
 
     @Test
-    void startPaymentExpired() {
+    void processPaymentEventSuccess() {
         Order order = new Order();
 
         order.setId(ORDER_ID);
-        order.setOrderStatus(OrderStatus.CREATED);
-        order.setReservedUntil(LocalDateTime.now().minusMinutes(1));
+        order.setOrderStatus(OrderStatus.PENDING_PAYMENT);
+
+        OrderItem orderItem = new OrderItem();
+        orderItem.setEventId(EVENT_ID);
+        orderItem.setQuantity(2);
+        orderItem.setStatus(OrderItemStatus.RESERVED);
+        order.addOrderItem(orderItem);
 
         when(orderRepository.findById(ORDER_ID)).thenReturn(Optional.of(order));
 
-        assertThrows(OrderExpiredException.class,
-                () -> orderService.startPayment(ORDER_ID));
+        PaymentEventPayload paymentEventPayload = new PaymentEventPayload();
+        paymentEventPayload.setOrderId(ORDER_ID);
+        paymentEventPayload.setPaymentId(UUID.randomUUID());
+        paymentEventPayload.setPaymentStatus(PaymentStatus.SUCCESS);
+
+        orderService.processPaymentEvent(paymentEventPayload);
+
+        assertEquals(OrderStatus.PAID, order.getOrderStatus());
+        assertEquals(OrderItemStatus.CONFIRMED, order.getOrderItems().get(0).getStatus());
+        verify(ticketReservationService).updateSoldTicketsByEvent(EVENT_ID, 2);
+        verify(outboxEventRepository).save(any(OutboxEvent.class));
     }
 }

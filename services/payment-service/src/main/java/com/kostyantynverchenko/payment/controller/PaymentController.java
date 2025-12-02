@@ -24,6 +24,11 @@ public class PaymentController {
         return paymentService.getPaymentById(id);
     }
 
+    @GetMapping("/payments")
+    public List<Payment> getAllPayments() {
+        return paymentService.getAllPayments();
+    }
+
     @GetMapping("/payments/by-order/{orderId}")
     public List<Payment> getPaymentsByOrderId(@PathVariable UUID orderId) {
         return paymentService.getPaymentByOrderId(orderId);

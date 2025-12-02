@@ -26,9 +26,9 @@ services:
       SPRING_DATASOURCE_USERNAME: orders_user
       SPRING_DATASOURCE_PASSWORD: 123456789
       EVENTS_SERVICE_BASE_URL: http://events-service:8080
-      PAYMENT_SERVICE_BASE_URL: http://payment-service:8082
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       KAFKA_ORDERS_TOPIC: orders.events
+      KAFKA_PAYMENTS_TOPIC: payments.events
     depends_on:
       orders-db:
         condition: service_healthy
@@ -49,6 +49,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: 123456789
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       KAFKA_ORDERS_TOPIC: orders.events
+      KAFKA_PAYMENTS_TOPIC: payments.events
     depends_on:
       payment-db:
         condition: service_healthy
@@ -68,11 +69,12 @@ services:
         condition: service_started
     ports:
       - "9092:9092"
+      - "9093:9093"
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9093
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
