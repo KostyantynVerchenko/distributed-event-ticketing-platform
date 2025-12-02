@@ -3,6 +3,7 @@ package com.kostyantynverchenko.ticketing.events.controller;
 import com.kostyantynverchenko.ticketing.events.dto.CreateEventRequestDto;
 import com.kostyantynverchenko.ticketing.events.dto.EventResponseDto;
 import com.kostyantynverchenko.ticketing.events.dto.PagedResponse;
+import com.kostyantynverchenko.ticketing.events.dto.UpdateTicketsRequestDto;
 import com.kostyantynverchenko.ticketing.events.entity.Event;
 import com.kostyantynverchenko.ticketing.events.service.EventService;
 import jakarta.validation.Valid;
@@ -69,6 +70,15 @@ public class EventController {
         log.info("Update event request: id = {}, title = {}", id, createEventRequestDto.getTitle());
 
         EventResponseDto eventResponseDto = new EventResponseDto(eventService.updateEvent(id, createEventRequestDto));
+
+        return ok(eventResponseDto);
+    }
+
+    @PostMapping("/events/{id}/tickets/sell")
+    public ResponseEntity<?> reduceTickets(@PathVariable UUID id, @Valid @RequestBody UpdateTicketsRequestDto updateTicketsRequestDto) {
+        log.info("Reduce tickets request: id = {}, quantity = {}", id, updateTicketsRequestDto.getQuantity());
+
+        EventResponseDto eventResponseDto = new EventResponseDto(eventService.reduceAvailableTickets(id, updateTicketsRequestDto.getQuantity()));
 
         return ok(eventResponseDto);
     }
