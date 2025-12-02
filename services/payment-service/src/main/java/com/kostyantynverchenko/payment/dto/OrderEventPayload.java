@@ -1,25 +1,17 @@
-package com.kostyantynverchenko.ticketing.orders.dto;
+package com.kostyantynverchenko.payment.dto;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
-public class EventPayload {
+public class OrderEventPayload {
     private UUID orderId;
     private UUID userId;
     private String status;
     private BigDecimal totalAmount;
     private String orderCurrency;
 
-    public EventPayload() {
+    public OrderEventPayload() {
 
-    }
-
-    public EventPayload(UUID orderId, UUID userId, String status, BigDecimal totalAmount,  String orderCurrency) {
-        this.orderId = orderId;
-        this.userId = userId;
-        this.status = status;
-        this.totalAmount = totalAmount;
-        this.orderCurrency = orderCurrency;
     }
 
     public UUID getOrderId() {

@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.verify;
@@ -55,7 +56,7 @@ class EventServiceTest {
     @Test
     @DisplayName("Get event by invalid id")
     void getEventById() {
-        Long id = 1L;
+        UUID id = UUID.randomUUID();
         when(eventRepository.findById(id)).thenReturn(Optional.empty());
 
         assertThrows(EventNotFoundException.class, () -> eventService.getEventById(id));

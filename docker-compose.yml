@@ -27,10 +27,14 @@ services:
       SPRING_DATASOURCE_PASSWORD: 123456789
       EVENTS_SERVICE_BASE_URL: http://events-service:8080
       PAYMENT_SERVICE_BASE_URL: http://payment-service:8082
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_ORDERS_TOPIC: orders.events
     depends_on:
       orders-db:
         condition: service_healthy
       events-service:
+        condition: service_started
+      kafka:
         condition: service_started
 
   payment-service:
@@ -43,9 +47,35 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://payment-db:5432/ticketing_payment
       SPRING_DATASOURCE_USERNAME: payment_user
       SPRING_DATASOURCE_PASSWORD: 123456789
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_ORDERS_TOPIC: orders.events
     depends_on:
       payment-db:
         condition: service_healthy
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    depends_on:
+      zookeeper:
+        condition: service_started
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
   db:
     image: postgres:15
@@ -101,3 +131,6 @@ services:
 volumes:
   db-data:
   orders-db-data:
+  payment-db-data:
+  zookeeper-data:
+  kafka-data:

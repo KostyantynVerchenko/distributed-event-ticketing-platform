@@ -38,7 +38,7 @@ public class ReservationExpirationService {
 
     private void publishOrderEvent(String eventType, Order order) {
         try {
-            EventPayload payload = new EventPayload(order.getId(), order.getUserId(), order.getOrderStatus().name(),order.getTotalAmount());
+            EventPayload payload = new EventPayload(order.getId(), order.getUserId(), order.getOrderStatus().name(),order.getTotalAmount(), order.getOrderCurrency().name());
 
             String payloadJson = objectMapper.writeValueAsString(payload);
 
