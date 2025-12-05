@@ -9,7 +9,7 @@
         <outputRelativeToContentRoot value="true" />
         <module name="events" />
       </profile>
-      <profile name="Annotation profile for auth-service" enabled="true">
+      <profile name="Annotation profile for gateway-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
@@ -19,6 +19,7 @@
         <module name="ticketing.orders" />
         <module name="auth-service" />
         <module name="payment-service" />
+        <module name="gateway-service" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
@@ -29,6 +30,7 @@
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="auth-service" options="-parameters" />
       <module name="events" options="-parameters" />
+      <module name="gateway-service" options="-parameters" />
       <module name="payment-service" options="-parameters" />
       <module name="ticketing.orders" options="-parameters" />
     </option>
