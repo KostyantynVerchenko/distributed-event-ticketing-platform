@@ -1,26 +1,61 @@
 version: '3.9'
 
 services:
+  eureka-server:
+    build:
+      context: ./services/eureka-server
+      dockerfile: Dockerfile
+    environment:
+      EUREKA_INSTANCE_HOSTNAME: eureka-server
+    ports:
+      - "8761:8761"
+
+  gateway-service:
+    build:
+      context: ./services/gateway-service
+      dockerfile: Dockerfile
+    ports:
+      - "8084:8084"
+    environment:
+      EUREKA_SERVER_URL: http://eureka-server:8761/eureka
+    depends_on:
+      eureka-server:
+        condition: service_started
+
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://auth-db:5432/ticketing_auth
+      SPRING_DATASOURCE_USERNAME: auth_user
+      SPRING_DATASOURCE_PASSWORD: 123456789
+      EUREKA_SERVER_URL: http://eureka-server:8761/eureka
+    depends_on:
+      auth-db:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+
   events-service:
     build:
       context: ./services/events-service
       dockerfile: Dockerfile
-    ports:
-      - "8080:8080"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/ticketing_events
       SPRING_DATASOURCE_USERNAME: events_user
       SPRING_DATASOURCE_PASSWORD: 123456789
+      EUREKA_SERVER_URL: http://eureka-server:8761/eureka
     depends_on:
       db:
         condition: service_healthy
+      eureka-server:
+        condition: service_started
 
   orders-service:
     build:
       context: ./services/orders-service
       dockerfile: Dockerfile
-    ports:
-      - "8081:8081"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://orders-db:5432/ticketing_orders
       SPRING_DATASOURCE_USERNAME: orders_user
@@ -29,6 +64,7 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       KAFKA_ORDERS_TOPIC: orders.events
       KAFKA_PAYMENTS_TOPIC: payments.events
+      EUREKA_SERVER_URL: http://eureka-server:8761/eureka
     depends_on:
       orders-db:
         condition: service_healthy
@@ -36,13 +72,13 @@ services:
         condition: service_started
       kafka:
         condition: service_started
+      eureka-server:
+        condition: service_started
 
   payment-service:
     build:
       context: ./services/payment-service
       dockerfile: Dockerfile
-    ports:
-      - "8082:8082"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://payment-db:5432/ticketing_payment
       SPRING_DATASOURCE_USERNAME: payment_user
@@ -50,9 +86,12 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       KAFKA_ORDERS_TOPIC: orders.events
       KAFKA_PAYMENTS_TOPIC: payments.events
+      EUREKA_SERVER_URL: http://eureka-server:8761/eureka
     depends_on:
       payment-db:
         condition: service_healthy
+      eureka-server:
+        condition: service_started
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.6.1
@@ -130,9 +169,27 @@ services:
       timeout: 5s
       retries: 5
 
+  auth-db:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ticketing_auth
+      POSTGRES_USER: auth_user
+      POSTGRES_PASSWORD: 123456789
+    ports:
+      - "5437:5432"
+    volumes:
+      - auth-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\"" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   db-data:
   orders-db-data:
   payment-db-data:
+  auth-db-data:
   zookeeper-data:
   kafka-data:
