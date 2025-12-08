@@ -4,8 +4,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.kostyantynverchenko.ticketing.orders.dto.CreateOrderRequest;
 import com.kostyantynverchenko.ticketing.orders.dto.OrderResponse;
 import com.kostyantynverchenko.ticketing.orders.entity.Order;
+import com.kostyantynverchenko.ticketing.orders.service.JwtService;
 import com.kostyantynverchenko.ticketing.orders.service.OrderService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.User;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,9 +20,11 @@ import java.util.UUID;
 public class OrderController {
 
     private final OrderService orderService;
+    private final JwtService jwtService;
 
-    public OrderController(OrderService orderService) {
+    public OrderController(OrderService orderService, JwtService jwtService) {
         this.orderService = orderService;
+        this.jwtService = jwtService;
     }
 
     @GetMapping("/orders")
@@ -44,9 +48,12 @@ public class OrderController {
     }
 
     @PostMapping("/orders")
-    public ResponseEntity<?> createOrder(@RequestBody CreateOrderRequest dto) {
+    public ResponseEntity<?> createOrder(@RequestHeader("Authorization") String authHeader, @RequestBody CreateOrderRequest dto) {
         log.info("Request to create Order");
-        Order order = orderService.createOrder(dto);
+
+        String token = authHeader.substring(7);
+        UUID userId = jwtService.extractUserId(token);
+        Order order = orderService.createOrder(dto, userId);
         OrderResponse orderResponse = new OrderResponse(order);
 
         return ResponseEntity.ok(orderResponse);

@@ -2,7 +2,6 @@ package com.kostyantynverchenko.ticketing.auth.service;
 
 import com.kostyantynverchenko.ticketing.auth.entity.User;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

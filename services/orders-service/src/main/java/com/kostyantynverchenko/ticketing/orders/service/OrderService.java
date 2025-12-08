@@ -72,7 +72,7 @@ public class OrderService {
     }
 
     @Transactional
-    public Order createOrder(CreateOrderRequest dto) {
+    public Order createOrder(CreateOrderRequest dto, UUID userId) {
         Order order = new Order();
         OrderItem orderItem = new OrderItem();
         EventResponse eventResponse = eventsServiceClient.findById(dto.getEventId());
@@ -96,7 +96,7 @@ public class OrderService {
         orderItem.setStatus(OrderItemStatus.RESERVED);
 
         order.addOrderItem(orderItem);
-        order.setUserId(UUID.randomUUID());
+        order.setUserId(userId);
         order.setOrderStatus(OrderStatus.PENDING_PAYMENT);
 
         BigDecimal totAm = BigDecimal.valueOf(orderItem.getQuantity()).multiply(eventResponse.getPrice());

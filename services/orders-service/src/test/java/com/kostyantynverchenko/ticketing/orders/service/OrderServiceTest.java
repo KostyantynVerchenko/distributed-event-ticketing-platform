@@ -32,6 +32,7 @@ class OrderServiceTest {
 
     private static final UUID ORDER_ID = UUID.randomUUID();
     private static final UUID EVENT_ID = UUID.randomUUID();
+    private static final UUID USER_ID = UUID.randomUUID();
 
     @Mock
     private OrderRepository orderRepository;
@@ -76,11 +77,11 @@ class OrderServiceTest {
         when(ticketReservationService.addReservedTicketsByEvent(EVENT_ID, 2)).thenReturn(null);
         when(orderRepository.save(any(Order.class))).thenAnswer(i -> i.getArgument(0));
 
-        Order result = orderService.createOrder(createOrderRequest);
+        Order result = orderService.createOrder(createOrderRequest, USER_ID);
 
         assertNotNull(result);
         assertEquals(OrderStatus.PENDING_PAYMENT, result.getOrderStatus());
-        assertNotNull(result.getUserId());
+        assertEquals(USER_ID, result.getUserId());
         assertNotNull(result.getReservedUntil());
         assertEquals(1, result.getOrderItems().size());
 
@@ -112,7 +113,7 @@ class OrderServiceTest {
 
         when(eventsServiceClient.findById(EVENT_ID)).thenReturn(eventResponse);
 
-        assertThrows(EventNotAvailableException.class, () -> orderService.createOrder(createOrderRequest));
+        assertThrows(EventNotAvailableException.class, () -> orderService.createOrder(createOrderRequest, USER_ID));
 
         verify(eventsServiceClient).findById(EVENT_ID);
         verify(ticketReservationService, never()).addReservedTicketsByEvent(any(), any());

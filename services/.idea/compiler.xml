@@ -20,7 +20,7 @@
         <module name="auth-service" />
         <module name="gateway-service" />
       </profile>
-      <profile name="Annotation profile for eureka-server" enabled="true">
+      <profile name="Annotation profile for orders" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
