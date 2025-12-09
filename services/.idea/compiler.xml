@@ -9,18 +9,7 @@
         <outputRelativeToContentRoot value="true" />
         <module name="events" />
       </profile>
-      <profile name="Annotation profile for auth-service" enabled="true">
-        <sourceOutputDir name="target/generated-sources/annotations" />
-        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
-        <outputRelativeToContentRoot value="true" />
-        <processorPath useClasspath="false">
-          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.42/lombok-1.18.42.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.42/lombok-1.18.42.jar" />
-        </processorPath>
-        <module name="auth-service" />
-        <module name="gateway-service" />
-      </profile>
-      <profile name="Annotation profile for orders" enabled="true">
+      <profile name="Annotation profile for notifications-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
@@ -28,12 +17,16 @@
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.42/lombok-1.18.42.jar" />
         </processorPath>
         <module name="ticketing.orders" />
-        <module name="eureka-server" />
+        <module name="auth-service" />
         <module name="payment-service" />
+        <module name="eureka-server" />
+        <module name="gateway-service" />
+        <module name="notifications-service" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="auth-services" target="23" />
+      <module name="notification-service" target="21" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
@@ -42,6 +35,8 @@
       <module name="eureka-server" options="-parameters" />
       <module name="events" options="-parameters" />
       <module name="gateway-service" options="-parameters" />
+      <module name="notification-service" options="-parameters" />
+      <module name="notifications-service" options="-parameters" />
       <module name="payment-service" options="-parameters" />
       <module name="ticketing.orders" options="-parameters" />
     </option>
