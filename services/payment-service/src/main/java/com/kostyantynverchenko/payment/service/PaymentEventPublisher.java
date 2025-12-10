@@ -3,7 +3,6 @@ package com.kostyantynverchenko.payment.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kostyantynverchenko.payment.dto.event.PaymentEventMessage;
 import com.kostyantynverchenko.payment.dto.event.PaymentEventPayload;
-import com.kostyantynverchenko.payment.entity.Payment;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;

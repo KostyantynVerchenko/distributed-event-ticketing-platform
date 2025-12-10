@@ -1,6 +1,7 @@
 package com.kostyantynverchenko.ticketing.events.service;
 
 import com.kostyantynverchenko.ticketing.events.dto.CreateEventRequestDto;
+import com.kostyantynverchenko.ticketing.events.dto.EventPayload;
 import com.kostyantynverchenko.ticketing.events.dto.EventResponseDto;
 import com.kostyantynverchenko.ticketing.events.dto.PagedResponse;
 import com.kostyantynverchenko.ticketing.events.entity.Event;
@@ -23,9 +24,11 @@ import java.util.UUID;
 @Service
 public class EventService {
     private final EventRepository eventRepository;
+    private final EventPublisher eventPublisher;
 
-    public EventService(EventRepository eventRepository) {
+    public EventService(EventRepository eventRepository, EventPublisher eventPublisher) {
         this.eventRepository = eventRepository;
+        this.eventPublisher = eventPublisher;
     }
 /*
     public List<Event> getAllEvents() {
@@ -70,6 +73,8 @@ public class EventService {
 
         eventRepository.save(event);
 
+        publishEvent(event);
+
         return event;
     }
 
@@ -87,6 +92,8 @@ public class EventService {
 
         eventRepository.save(event);
 
+        publishEvent(event);
+
         return event;
     }
 
@@ -98,6 +105,8 @@ public class EventService {
         event.setEventStatus(EventStatus.DELETED);
 
         eventRepository.save(event);
+
+        publishEvent(event);
     }
 
     @Transactional
@@ -118,5 +127,29 @@ public class EventService {
         event.setTicketsAvailable(updatedTickets);
 
         return eventRepository.save(event);
+    }
+
+    public void publishEvent(Event event) {
+        EventPayload eventPayload = new EventPayload();
+
+        eventPayload.setId(event.getId());
+        eventPayload.setTitle(event.getTitle());
+        eventPayload.setDate(event.getDate());
+        eventPayload.setPrice(event.getPrice());
+        eventPayload.setStatus(event.getEventStatus());
+
+        String eventType;
+
+        switch (event.getEventStatus()) {
+            case CANCELLED -> eventType = "EVENT_CANCELLED";
+            case AVAILABLE -> eventType = "EVENT_AVAILABLE";
+            case EXPIRED -> eventType = "EVENT_EXPIRED";
+            case DELETED -> eventType = "EVENT_DELETED";
+            default -> {
+                return;
+            }
+        }
+
+        eventPublisher.publishEvent(eventPayload, eventType);
     }
 }
