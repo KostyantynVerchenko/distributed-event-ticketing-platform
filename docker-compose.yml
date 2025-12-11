@@ -46,9 +46,34 @@ services:
       SPRING_DATASOURCE_USERNAME: events_user
       SPRING_DATASOURCE_PASSWORD: 123456789
       EUREKA_SERVER_URL: http://eureka-server:8761/eureka
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     depends_on:
       db:
         condition: service_healthy
+      eureka-server:
+        condition: service_started
+      redis:
+        condition: service_healthy
+
+  notifications-service:
+    build:
+      context: ./services/notifications-service
+      dockerfile: Dockerfile
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://notifications-db:5432/ticketing_notifications
+      SPRING_DATASOURCE_USERNAME: notifications_user
+      SPRING_DATASOURCE_PASSWORD: 123456789
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_ORDERS_TOPIC: orders.events
+      KAFKA_PAYMENTS_TOPIC: payments.events
+      KAFKA_EVENTS_TOPIC: events.events
+      EUREKA_SERVER_URL: http://eureka-server:8761/eureka
+    depends_on:
+      notifications-db:
+        condition: service_healthy
+      kafka:
+        condition: service_started
       eureka-server:
         condition: service_started
 
@@ -118,6 +143,16 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD-SHELL", "redis-cli ping | grep PONG" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   db:
     image: postgres:15
     restart: unless-stopped
@@ -131,6 +166,23 @@ services:
       - db-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  notifications-db:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ticketing_notifications
+      POSTGRES_USER: notifications_user
+      POSTGRES_PASSWORD: 123456789
+    ports:
+      - "5438:5432"
+    volumes:
+      - notifications-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\"" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -191,5 +243,6 @@ volumes:
   orders-db-data:
   payment-db-data:
   auth-db-data:
+  notifications-db-data:
   zookeeper-data:
   kafka-data:

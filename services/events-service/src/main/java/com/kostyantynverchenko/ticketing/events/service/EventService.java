@@ -11,6 +11,9 @@ import com.kostyantynverchenko.ticketing.events.exception.NotEnoughTicketsExcept
 import com.kostyantynverchenko.ticketing.events.repository.EventRepository;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -37,6 +40,7 @@ public class EventService {
     }
  */
 
+    @Cacheable(value = "eventsPage",key = "#page + '-' + #size")
     public PagedResponse<EventResponseDto> getAllEvents(int page, int size) {
         log.debug("Get all events with page {} and size {}", page, size);
 
@@ -48,8 +52,9 @@ public class EventService {
         List<EventResponseDto> content = events.getContent().stream().map(EventResponseDto::new).toList();
 
         return new PagedResponse<>(content, events.getNumber(), events.getSize(), events.getTotalElements(), events.getTotalPages(), events.isLast());
-    };
+    }
 
+    @Cacheable(value = "eventById", key = "#id")
     public Event getEventById(UUID id) {
         log.debug("Get event by id {}", id);
         return eventRepository.findById(id)
@@ -60,6 +65,10 @@ public class EventService {
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "eventsPage", allEntries = true),
+            @CacheEvict(value = "eventById", key = "#result.id", condition = "#result != null")
+    })
     public Event createEvent(CreateEventRequestDto createEventRequestDto) {
         log.debug("Create event: title = {}, date = {}", createEventRequestDto.getTitle(), createEventRequestDto.getDate());
 
@@ -79,6 +88,10 @@ public class EventService {
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "eventsPage", allEntries = true),
+            @CacheEvict(value = "eventById", key = "#id")
+    })
     public Event updateEvent(UUID id, CreateEventRequestDto createEventRequestDto) {
         log.debug("Update event: id = {}", id);
 
@@ -98,6 +111,10 @@ public class EventService {
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "eventsPage", allEntries = true),
+            @CacheEvict(value = "eventById", key = "#id")
+    })
     public void deleteEvent(UUID id) {
         log.debug("Delete event: id = {}", id);
         Event event = getEventById(id);
@@ -110,6 +127,10 @@ public class EventService {
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "eventsPage", allEntries = true),
+            @CacheEvict(value = "eventById", key = "#id")
+    })
     public Event reduceAvailableTickets(UUID id, int quantity) {
         log.debug("Reduce tickets for event: id = {}, quantity = {}", id, quantity);
 
