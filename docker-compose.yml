@@ -18,6 +18,8 @@ services:
       - "8084:8084"
     environment:
       EUREKA_SERVER_URL: http://eureka-server:8761/eureka
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     depends_on:
       eureka-server:
         condition: service_started
