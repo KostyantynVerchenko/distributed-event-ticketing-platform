@@ -1,4 +1,4 @@
-package com.kostyantynverchenko.ticketing.gateway;
+package com.kostyantynverchenko.ticketing.gateway.security;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -61,6 +61,8 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         } catch (Exception ex) {
             log.warn("Failed to apply rate limiting. Continuing request flow.", ex);
         }
+
+        filterChain.doFilter(request, response);
     }
 
     private String resolveClientKey(HttpServletRequest request) {

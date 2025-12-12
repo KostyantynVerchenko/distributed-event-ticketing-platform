@@ -1,6 +1,6 @@
 package com.kostyantynverchenko.ticketing.gateway.config;
 
-import com.kostyantynverchenko.ticketing.gateway.RateLimitingFilter;
+import com.kostyantynverchenko.ticketing.gateway.security.RateLimitingFilter;
 import com.kostyantynverchenko.ticketing.gateway.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
