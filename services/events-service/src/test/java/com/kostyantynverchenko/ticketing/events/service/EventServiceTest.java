@@ -28,6 +28,9 @@ class EventServiceTest {
     @Mock
     private EventRepository eventRepository;
 
+    @Mock
+    private EventPublisher eventPublisher;
+
     @InjectMocks
     private EventService eventService;
 
