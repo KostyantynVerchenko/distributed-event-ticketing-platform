@@ -1,7 +1,5 @@
 package com.kostyantynverchenko.ticketing.notifications.dto;
 
-import com.kostyantynverchenko.ticketing.events.entity.EventStatus;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;

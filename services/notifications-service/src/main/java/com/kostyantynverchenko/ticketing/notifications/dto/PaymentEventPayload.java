@@ -1,7 +1,5 @@
 package com.kostyantynverchenko.ticketing.notifications.dto;
 
-import com.kostyantynverchenko.ticketing.orders.dto.payment.PaymentStatus;
-
 import java.math.BigDecimal;
 import java.util.UUID;
 
