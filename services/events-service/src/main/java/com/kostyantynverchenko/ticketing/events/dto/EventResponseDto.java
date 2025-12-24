@@ -3,6 +3,7 @@ package com.kostyantynverchenko.ticketing.events.dto;
 import com.kostyantynverchenko.ticketing.events.entity.Event;
 import com.kostyantynverchenko.ticketing.events.entity.EventStatus;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;

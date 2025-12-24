@@ -1,5 +1,6 @@
 package com.kostyantynverchenko.ticketing.events.dto;
 
+import java.io.Serializable;
 import java.util.List;
 
 public class PagedResponse<T> implements Serializable {
