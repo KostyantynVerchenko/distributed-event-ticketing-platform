@@ -1,0 +1,47 @@
+namespace: ticketing
+replicaCount: 1
+imageTag: latest
+imagePullSecret: ghcr-cred
+
+postgres:
+  image: postgres:15
+  password: "123456789"
+  port: 5432
+
+redis:
+  image: redis:7
+  port: 6379
+
+zookeeper:
+  image: confluentinc/cp-zookeeper:7.6.1
+
+kafka:
+  image: confluentinc/cp-kafka:7.6.1
+  bootstrapServers: "kafka-svc:9092"
+
+services:
+  auth:
+    dbName: ticketing_auth
+    dbUser: auth_user
+  events:
+    dbName: ticketing_events
+    dbUser: events_user
+  notifications:
+    dbName: ticketing_notifications
+    dbUser: notifications_user
+    topics:
+      orders: orders.events
+      payments: payments.events
+      events: events.events
+  orders:
+    dbName: ticketing_orders
+    dbUser: orders_user
+    topics:
+      orders: orders.events
+      payments: payments.events
+  payment:
+    dbName: ticketing_payment
+    dbUser: payment_user
+    topics:
+      orders: orders.events
+      payments: payments.events

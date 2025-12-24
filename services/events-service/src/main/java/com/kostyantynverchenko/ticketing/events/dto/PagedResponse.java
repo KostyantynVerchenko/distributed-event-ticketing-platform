@@ -2,7 +2,10 @@ package com.kostyantynverchenko.ticketing.events.dto;
 
 import java.util.List;
 
-public class PagedResponse<T> {
+public class PagedResponse<T> implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
     private List<T> content;
     private int page;
     private int pageSize;

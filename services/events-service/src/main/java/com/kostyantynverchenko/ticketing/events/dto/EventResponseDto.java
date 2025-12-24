@@ -7,7 +7,10 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
-public class EventResponseDto {
+public class EventResponseDto implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
     private UUID id;
     private String title;
     private LocalDate date;
