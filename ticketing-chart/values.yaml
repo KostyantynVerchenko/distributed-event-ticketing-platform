@@ -3,6 +3,20 @@ replicaCount: 1
 imageTag: latest
 imagePullSecret: ghcr-cred
 
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  hosts:
+    - host: ticketing.local
+      paths:
+        - path: /
+          pathType: Prefix
+          service: gateway-service
+          servicePort: 8084
+  tls: []
+
 postgres:
   image: postgres:15
   password: "123456789"
