@@ -128,7 +128,7 @@ public class OrderService {
         else {
             throw new InvalidOrderStateException(orderId, order.getOrderStatus());
         }
-        log.info("Order {} has been cancelled", orderId);
+        log.info("Order {} has been cancelled (test)", orderId);
     }
 
 

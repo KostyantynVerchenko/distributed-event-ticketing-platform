@@ -2,6 +2,12 @@ namespace: ticketing
 replicaCount: 1
 imageTag: latest
 imagePullSecret: ghcr-cred
+imageRegistry: ghcr.io/kostyantynverchenko
+
+registry:
+  createSecret: false
+  secretName: ghcr-cred
+  server: ghcr.io
 
 ingress:
   enabled: true

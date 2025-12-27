@@ -4,6 +4,7 @@
 {{- $replicas := .Values.replicaCount -}}
 {{- $pgPass := .Values.postgres.password -}}
 {{- $kafka := .Values.kafka.bootstrapServers -}}
+{{- $registry := .Values.imageRegistry -}}
 
 apiVersion: apps/v1
 kind: Deployment
@@ -23,7 +24,7 @@ spec:
       imagePullSecrets: [{name: {{ $secret }}}]
       containers:
         - name: eureka-server
-          image: ghcr.io/kostyantynverchenko/eureka-server:{{ $tag }}
+          image: {{ printf "%s/eureka-server:%s" $registry $tag }}
           ports: [{containerPort: 8761}]
           env:
             - name: EUREKA_INSTANCE_HOSTNAME
@@ -55,7 +56,7 @@ spec:
       imagePullSecrets: [{name: {{ $secret }}}]
       containers:
         - name: gateway-service
-          image: ghcr.io/kostyantynverchenko/gateway-service:{{ $tag }}
+          image: {{ printf "%s/gateway-service:%s" $registry $tag }}
           ports: [{containerPort: 8084}]
           env:
             - name: EUREKA_SERVER_URL
@@ -91,7 +92,7 @@ spec:
       imagePullSecrets: [{name: {{ $secret }}}]
       containers:
         - name: auth-service
-          image: ghcr.io/kostyantynverchenko/auth-service:{{ $tag }}
+          image: {{ printf "%s/auth-service:%s" $registry $tag }}
           ports: [{containerPort: 8080}]
           env:
             - name: SPRING_DATASOURCE_URL
@@ -129,7 +130,7 @@ spec:
       imagePullSecrets: [{name: {{ $secret }}}]
       containers:
         - name: events-service
-          image: ghcr.io/kostyantynverchenko/events-service:{{ $tag }}
+          image: {{ printf "%s/events-service:%s" $registry $tag }}
           ports: [{containerPort: 8080}]
           env:
             - name: SPRING_DATASOURCE_URL
@@ -173,7 +174,7 @@ spec:
       imagePullSecrets: [{name: {{ $secret }}}]
       containers:
         - name: notifications-service
-          image: ghcr.io/kostyantynverchenko/notifications-service:{{ $tag }}
+          image: {{ printf "%s/notifications-service:%s" $registry $tag }}
           ports: [{containerPort: 8080}]
           env:
             - name: SPRING_DATASOURCE_URL
@@ -219,7 +220,7 @@ spec:
       imagePullSecrets: [{name: {{ $secret }}}]
       containers:
         - name: orders-service
-          image: ghcr.io/kostyantynverchenko/orders-service:{{ $tag }}
+          image: {{ printf "%s/orders-service:%s" $registry $tag }}
           ports: [{containerPort: 8080}]
           env:
             - name: SPRING_DATASOURCE_URL
@@ -265,7 +266,7 @@ spec:
       imagePullSecrets: [{name: {{ $secret }}}]
       containers:
         - name: payment-service
-          image: ghcr.io/kostyantynverchenko/payment-service:{{ $tag }}
+          image: {{ printf "%s/payment-service:%s" $registry $tag }}
           ports: [{containerPort: 8080}]
           env:
             - name: SPRING_DATASOURCE_URL
